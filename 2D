@@ -1,0 +1,58 @@
+import numpy as np
+import matplotlib.pyplot as plt
+import pandas as pd
+
+# x維度{N,D}
+def cal_pairwise_dist(x):
+    sum_x = np.sum(np.square(x), 1)
+    dist = np.add(np.add(-2 * np.dot(x, x.T), sum_x).T, sum_x)
+    #返回任意兩點之间距離的平方
+    return dist
+
+def my_mds(dist, n_dims):
+
+    n, n = np.shape(dist)
+    dist[dist < 0 ] = 0
+    
+    T1 = np.ones((n,n))*np.sum(dist)/n**2
+    T2 = np.sum(dist, axis = 1, keepdims=True)/n
+    T3 = np.sum(dist, axis = 0, keepdims=True)/n
+
+    B = -(T1 - T2 - T3 + dist)/2
+
+    eig_val, eig_vector = np.linalg.eig(B)
+    index_ = np.argsort(-eig_val)[:n_dims]
+    picked_eig_val = eig_val[index_].real
+    picked_eig_vector = eig_vector[:, index_]
+    
+    return picked_eig_vector*picked_eig_val**(0.5)
+
+def draw_pic(datas,labs):
+    plt.cla()
+    unque_labs = np.unique(labs)
+    colors = [plt.cm.Spectral(each)
+      for each in np.linspace(0, 1,len(unque_labs))]
+    p=[]
+    legends = []
+    for i in range(len(unque_labs)):
+        index = np.where(labs==unque_labs[i])
+        pi = plt.scatter(datas[index, 0], datas[index, 1], c =[colors[i]] )
+        p.append(pi)
+        legends.append(unque_labs[i])
+
+    plt.legend(p, legends)
+    plt.show() 
+
+
+if __name__ == '__main__':
+    data=pd.read_excel("C:\\Users\\acer\\Desktop\\測試stata\\005.xls")
+    data1 = data.fillna(0) #NAN補0
+    feas = data1.iloc[:,:-1].values
+    feas = np.float32(feas)
+    labs = data1.iloc[:,-1].values
+    
+    dist = cal_pairwise_dist(feas)
+
+    data_2d = my_mds(dist,3)
+  
+    draw_pic(data_2d,labs)
