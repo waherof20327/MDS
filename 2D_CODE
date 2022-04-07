@@ -1,0 +1,55 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Sat Mar 26 14:31:32 2022
+
+@author: shiuan
+"""
+
+import numpy as np
+import pandas as pd
+from sklearn.preprocessing import MinMaxScaler 
+from sklearn.manifold import MDS 
+import matplotlib.pyplot as plt
+
+
+def scatter_3d(X, y):
+    fig = plt.figure()
+    ax = plt.axes(projection='3d')
+    ax.scatter(X[:, 0], X[:, 1], X[:, 2], c=y, cmap=plt.cm.hot)
+    ax.view_init(10, -70)
+    ax.set_xlabel("$x_1$", fontsize=18)
+    ax.set_ylabel("$x_2$", fontsize=18)
+    ax.set_zlabel("$x_3$", fontsize=18)
+    plt.show(block=False)
+
+# load data and data preprocessing
+data = pd.read_csv("test.csv")
+columns = list(data.columns)
+need_columns = columns[1:]
+data = data[need_columns]
+X = data.to_numpy()
+# normalization
+scaler = MinMaxScaler() 
+X_scaled = scaler.fit_transform(X)
+
+# manifold learning reduce dimension
+mds = MDS(n_components=2,random_state=0) 
+X_2d = mds.fit_transform(X_scaled)
+
+# prepare label and plot 2D figure
+colors = ['r','g','b']
+label = ['setosa', 'versicolor', 'virginica']
+label_A = ['setosa'] * 4
+label_B = ['versicolor'] * 4
+label_C = ['virginica'] * 5
+labels = label_A + label_B + label_C
+labels = np.array(labels)
+
+for i in range(3):
+    idx = np.where(labels==label[i])[0]
+    x = X_2d[idx, 0]
+    y = X_2d[idx, 1]
+    plt.scatter(x, y, label=label[i], c=colors[i])
+    
+plt.legend()
+plt.show()
